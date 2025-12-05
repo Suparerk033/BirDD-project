@@ -22,36 +22,37 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
+  // ---------------- helpers (วันที่วันนี้ในรูป YYYY-MM-DD) ----------------
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   // ---------------- form state ----------------
   const [birdForm, setBirdForm] = useState<Omit<Bird, 'BirdID'>>({
+    Name: '',
     RingNo: '',
     Species: '',
     Sex: 'ไม่ทราบ',
+    Age: '',
     Color: '',
-    BirthDate: '',
+    AddedDate: '',
     Origin: 'เพาะเอง',
     Notes: '',
   });
 
-  // ✅ ใส่ type ให้ชัด และเพิ่ม Status
-  const [pairForm, setPairForm] = useState<Omit<Pair, 'PairID'>>({
+  const [pairForm, setPairForm] = useState<Omit<Pair, "PairID">>({
     MaleID: '',
     FemaleID: '',
     StartDate: '',
-    EndDate: '',
-    Status: 'ใช้งาน',
     Notes: '',
   });
 
-  const [chickForm, setChickForm] = useState<Omit<Chick, 'ChickID'>>({
-    ClutchID: '',
-    BirdID: '',
-    RingNo: '',
-    HatchDate: '',
-    Sex: 'ยังไม่ตรวจ',
-    Color: '',
-    Status: 'มีชีวิต',
-    Notes: '',
+  const [chickForm, setChickForm] = useState<Omit<Chick, "ChickID">>({
+    ClutchID: "",
+    RingNo: "",
+    Name: "",
+    HatchDate: todayStr,      // 🟢 default = วันนี้
+    Sex: "ยังไม่ตรวจ",
+    Color: "",
+    Status: "มีชีวิต",
   });
 
   // ---------------- edit state ----------------
@@ -88,7 +89,7 @@ function App() {
       if (allFailed) {
         setMessage(
           'โหลดข้อมูลไม่สำเร็จทั้ง 3 รายการ · ตรวจสอบว่า bird-api รันอยู่ที่ ' +
-            API_BASE_URL,
+          API_BASE_URL,
         );
       }
     } catch (err: any) {
@@ -125,19 +126,21 @@ function App() {
         }
 
         setBirdForm({
+          Name: '',
           RingNo: '',
           Species: '',
           Sex: 'ไม่ทราบ',
+          Age: '',
           Color: '',
-          BirthDate: '',
+          AddedDate: '',
           Origin: 'เพาะเอง',
           Notes: '',
         });
+
         setEditingBirdId(null);
       }
 
       if (type === 'pairs') {
-        // ✅ pairForm มี Status อยู่แล้ว
         const body = pairForm;
 
         if (editingPairId) {
@@ -155,8 +158,6 @@ function App() {
           MaleID: '',
           FemaleID: '',
           StartDate: '',
-          EndDate: '',
-          Status: 'ใช้งาน',
           Notes: '',
         });
         setEditingPairId(null);
@@ -177,14 +178,13 @@ function App() {
         }
 
         setChickForm({
-          ClutchID: '',
-          BirdID: '',
-          RingNo: '',
-          HatchDate: '',
-          Sex: 'ยังไม่ตรวจ',
-          Color: '',
-          Status: 'มีชีวิต',
-          Notes: '',
+          ClutchID: "",
+          RingNo: "",
+          Name: "",
+          HatchDate: todayStr,      // 🟢 reset = วันนี้
+          Sex: "ยังไม่ตรวจ",
+          Color: "",
+          Status: "มีชีวิต",
         });
         setEditingChickId(null);
       }
@@ -253,11 +253,13 @@ function App() {
     if (!b.BirdID) return;
     setEditingBirdId(b.BirdID);
     setBirdForm({
+      Name: b.Name || '',
       RingNo: b.RingNo || '',
       Species: b.Species || '',
       Sex: b.Sex || 'ไม่ทราบ',
+      Age: b.Age || '',
       Color: b.Color || '',
-      BirthDate: b.BirthDate || '',
+      AddedDate: b.AddedDate || '',
       Origin: b.Origin || 'เพาะเอง',
       Notes: b.Notes || '',
     });
@@ -272,8 +274,6 @@ function App() {
       MaleID: p.MaleID || '',
       FemaleID: p.FemaleID || '',
       StartDate: p.StartDate || '',
-      EndDate: p.EndDate || '',
-      Status: p.Status || 'ใช้งาน', // ✅ ดึง Status มาเก็บด้วย
       Notes: p.Notes || '',
     });
     setTab('pairs');
@@ -284,14 +284,13 @@ function App() {
     if (!k.ChickID) return;
     setEditingChickId(k.ChickID);
     setChickForm({
-      ClutchID: k.ClutchID || '',
-      BirdID: k.BirdID || '',
-      RingNo: k.RingNo || '',
-      HatchDate: k.HatchDate || '',
-      Sex: k.Sex || 'ยังไม่ตรวจ',
-      Color: k.Color || '',
-      Status: k.Status || 'มีชีวิต',
-      Notes: k.Notes || '',
+      ClutchID: k.ClutchID || "",
+      RingNo: k.RingNo || "",
+      Name: k.Name || "",
+      HatchDate: k.HatchDate || "",
+      Sex: k.Sex || "ยังไม่ตรวจ",
+      Color: k.Color || "",
+      Status: k.Status || "มีชีวิต",
     });
     setTab('chicks');
     setMessage(`กำลังแก้ไขลูกนก ${k.RingNo || k.ChickID}`);
@@ -306,8 +305,33 @@ function App() {
     let months =
       (now.getFullYear() - d.getFullYear()) * 12 +
       (now.getMonth() - d.getMonth());
+    if (now.getDate() < d.getDate()) {
+      months -= 1;
+    }
     if (months < 0) months = 0;
     return `${months}`;
+  };
+
+
+  const renderSexBadge = (sex?: string | null) => {
+    if (!sex) return "-";
+    if (sex === "เมีย") {
+      return <span className="sex-pill sex-pill-female">ตัวเมีย ♀</span>;
+    }
+    if (sex === "ผู้") {
+      return <span className="sex-pill sex-pill-male">ตัวผู้ ♂</span>;
+    }
+    return <span className="sex-pill sex-pill-unknown">ไม่ทราบ</span>;
+  };
+
+  const formatThaiDate = (dateStr?: string | null) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "-";
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear() + 543;
+    return `${day}/${month}/${year}`;
   };
 
   const renderChickStatusBadge = (status?: string | null) => {
@@ -347,13 +371,13 @@ function App() {
       <div className="card-header d-flex justify-content-between align-items-center">
         <div>
           <div className="d-flex align-items-center">
-            <span className="me-2" style={{ fontSize: '1.3rem' }}>
+            <span className="me-2" style={{ fontSize: "1.3rem" }}>
               📝
             </span>
             <span className="card-title-main">รายการนก</span>
           </div>
           <div className="text-muted small mt-1">
-            ดูภาพรวมนกทั้งหมดในฟาร์ม เรียงตามรหัสนก
+            ดูรายการนกทั้งหมดในฟาร์ม พร้อมเพศ อายุ และวันที่เพิ่ม
           </div>
         </div>
         <span className="badge bg-primary rounded-pill px-3 py-2">
@@ -370,7 +394,7 @@ function App() {
                 <th>ชื่อ</th>
                 <th>สายพันธุ์</th>
                 <th>เพศ</th>
-                <th>อายุ (เดือน)</th>
+                <th>อายุ</th>
                 <th>สี</th>
                 <th>วันที่เพิ่ม</th>
                 <th className="text-center">จัดการ</th>
@@ -386,25 +410,28 @@ function App() {
               ) : (
                 birds.map((b) => (
                   <tr key={b.BirdID}>
-                    <td className="fw-semibold">{b.RingNo || '-'}</td>
-                    <td>{(b as any).Name || '-'}</td>
-                    <td>{b.Species || '-'}</td>
-                    <td>{b.Sex || '-'}</td>
-                    <td>{(b as any).Age ?? calcAgeFromDate(b.BirthDate)}</td>
-                    <td>{b.Color || '-'}</td>
-                    <td>{b.BirthDate || '-'}</td>
-                    <td className="text-center">
-                      <button
-                        className="btn btn-sm btn-outline-primary me-1"
+                    <td>
+                      <span
+                        className="bird-code-link"
                         onClick={() => onEdit(b)}
                       >
-                        แก้ไข
-                      </button>
+                        {b.RingNo || "-"}
+                      </span>
+                    </td>
+                    <td>{b.Name || "-"}</td>
+                    <td>{b.Species || "-"}</td>
+                    <td>{renderSexBadge(b.Sex)}</td>
+                    <td>{b.Age ? `${b.Age} เดือน` : "-"}</td>
+                    <td>{b.Color || "-"}</td>
+                    <td>{formatThaiDate(b.AddedDate)}</td>
+                    <td className="text-center">
                       <button
-                        className="btn btn-sm btn-outline-danger"
+                        type="button"
+                        className="btn btn-link p-0 m-0 bird-action-delete"
                         onClick={() => onDelete(b)}
                       >
-                        ลบ
+                        <span className="bird-action-delete-icon">🗑️</span>
+                        <span>ลบ</span>
                       </button>
                     </td>
                   </tr>
@@ -547,11 +574,11 @@ function App() {
                 chicks.map((k) => (
                   <tr key={k.ChickID}>
                     <td className="fw-semibold">{k.RingNo || '-'}</td>
-                    <td>{k.Notes || '-'}</td>
+                    <td>{k.Name || '-'}</td>
                     <td>{k.ClutchID || '-'}</td>
                     <td>{k.Sex || '-'}</td>
-                    <td>{k.HatchDate || '-'}</td>
-                    <td>{calcAgeFromDate(k.HatchDate)}</td>
+                    <td>{formatThaiDate(k.HatchDate)}</td>
+                    <td>{calcAgeFromDate(k.HatchDate)} เดือน</td>
                     <td>{renderChickStatusBadge(k.Status)}</td>
                     <td className="text-center">
                       <button
@@ -576,6 +603,7 @@ function App() {
       </div>
     </div>
   );
+
 
   // ---------------- stats view ----------------
   const StatsView = ({

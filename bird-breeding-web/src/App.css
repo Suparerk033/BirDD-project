@@ -14,7 +14,7 @@ body {
 
   display: flex;
   justify-content: center; /* จัดกลางแนวนอน */
-  align-items: flex-start; 
+  align-items: flex-start;
 }
 
 /* กรอบหลักของเว็บ */
@@ -334,6 +334,38 @@ body {
   background-color: #eef2ff;
 }
 
+/* 🆕 รหัสนกเป็นลิงก์น้ำเงิน */
+.bird-code-link {
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 🆕 badge เพศ */
+.sex-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.sex-pill-female {
+  background-color: #ffe4f1;
+  color: #be185d;
+}
+
+.sex-pill-male {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.sex-pill-unknown {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
 /* ฟอร์มแนวนอน */
 .bird-form h3,
 .pair-form h3,
@@ -457,4 +489,43 @@ body {
   .bird-table td {
     white-space: nowrap;   /* กันหัวตารางขึ้นบรรทัดใหม่ */
   }
+}
+/* ปุ่มบันทึกการจับคู่ให้เป็นเขียวโทนสด + มน ๆ */
+.pair-form-save-btn {
+  background-color: #16a34a;  /* เขียวสด */
+  border-color: #16a34a;
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.pair-form-save-btn:hover:not(:disabled) {
+  background-color: #15803d;
+  border-color: #15803d;
+}
+
+.pair-form-save-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+.chick-form-save-btn {
+  background-color: #f97316;    /* ส้มสด */
+  border-color: #f97316;
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.chick-form-save-btn:hover:not(:disabled) {
+  background-color: #ea580c;
+  border-color: #ea580c;
+}
+
+.chick-form-save-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
 }
