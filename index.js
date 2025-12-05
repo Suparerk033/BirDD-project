@@ -23,7 +23,9 @@ let serviceAccount = null;
 if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
   try {
     serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-    console.log('✅ Loaded service account from GOOGLE_SERVICE_ACCOUNT_JSON (Render / server)');
+    console.log(
+      '✅ Loaded service account from GOOGLE_SERVICE_ACCOUNT_JSON (Render / server)',
+    );
   } catch (e) {
     console.error('❌ Cannot parse GOOGLE_SERVICE_ACCOUNT_JSON:', e);
     process.exit(1);
@@ -37,8 +39,12 @@ if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
     console.log('✅ Loaded service account from local service-account.json');
   } catch (e) {
     console.error('❌ Cannot load service account credentials:', e);
-    console.error('   - ถ้าเป็น dev: ให้ใส่ไฟล์ service-account.json ในโฟลเดอร์ bird-api และเพิ่มใน .gitignore');
-    console.error('   - ถ้าเป็น Render: ให้ตั้ง GOOGLE_SERVICE_ACCOUNT_JSON เป็นเนื้อ JSON ของ key ทั้งก้อน');
+    console.error(
+      '   - ถ้าเป็น dev: ให้ใส่ไฟล์ service-account.json ในโฟลเดอร์ bird-api และเพิ่มใน .gitignore',
+    );
+    console.error(
+      '   - ถ้าเป็น Render: ให้ตั้ง GOOGLE_SERVICE_ACCOUNT_JSON เป็นเนื้อ JSON ของ key ทั้งก้อน',
+    );
     process.exit(1);
   }
 }
@@ -64,7 +70,7 @@ async function getAuth() {
 
   // เผื่อกรณีที่ private_key ใน ENV เป็นแบบมีตัวอักษร "\n" จริง ๆ → แปลงให้เป็น newline
   let privateKey = serviceAccount.private_key;
-  if (privateKey.includes('\\n')) {
+  if (typeof privateKey === 'string' && privateKey.includes('\\n')) {
     privateKey = privateKey.replace(/\\n/g, '\n');
   }
 
@@ -217,36 +223,48 @@ async function deleteRowByIdAndShiftUp(sheetName, lastCol, id) {
   return true;
 }
 
-// ---------- BIRDS ----------
+// =================================================
+//                      BIRDS
+//  Sheet: Birds
+//  Header: BirdID, RingNo, Name, Species, Sex, Age, Color, AddedDate, Origin, Notes
+// =================================================
 app.get('/birds', async (req, res) => {
   try {
-    const birds = await getTable(SHEET_BIRDS, 'A1:H1000');
+    const birds = await getTable(SHEET_BIRDS, 'A1:J1000');
     res.json(birds);
   } catch (err) {
     console.error('GET /birds error:', err);
-    res.status(500).json({ error: 'Error fetching birds', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error fetching birds', detail: String(err) });
   }
 });
 
 app.post('/birds', async (req, res) => {
   try {
     const body = req.body;
-    const newId = await getNextId(SHEET_BIRDS, 'B');
+    const newId = await getNextId(SHEET_BIRDS, 'B'); // B0001, B0002, ...
+
     const values = [
       newId,
       body.RingNo || '',
+      body.Name || '',
       body.Species || '',
       body.Sex || '',
+      body.Age || '',
       body.Color || '',
-      body.BirthDate || '',
+      body.AddedDate || '',
       body.Origin || '',
       body.Notes || '',
     ];
-    await appendRow(SHEET_BIRDS, 'A:H', values);
+
+    await appendRow(SHEET_BIRDS, 'A:J', values);
     res.json({ success: true, BirdID: newId });
   } catch (err) {
     console.error('POST /birds error:', err);
-    res.status(500).json({ error: 'Error creating bird', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error creating bird', detail: String(err) });
   }
 });
 
@@ -262,19 +280,23 @@ app.put('/birds/:id', async (req, res) => {
     const values = [
       id,
       body.RingNo || '',
+      body.Name || '',
       body.Species || '',
       body.Sex || '',
+      body.Age || '',
       body.Color || '',
-      body.BirthDate || '',
+      body.AddedDate || '',
       body.Origin || '',
       body.Notes || '',
     ];
 
-    await updateRow(SHEET_BIRDS, rowIndex, 'A', 'H', values);
+    await updateRow(SHEET_BIRDS, rowIndex, 'A', 'J', values);
     res.json({ success: true });
   } catch (err) {
     console.error('PUT /birds/:id error:', err);
-    res.status(500).json({ error: 'Error updating bird', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error updating bird', detail: String(err) });
   }
 });
 
@@ -282,7 +304,7 @@ app.delete('/birds/:id', async (req, res) => {
   try {
     const id = req.params.id;
 
-    const ok = await deleteRowByIdAndShiftUp(SHEET_BIRDS, 'H', id);
+    const ok = await deleteRowByIdAndShiftUp(SHEET_BIRDS, 'J', id);
     if (!ok) {
       return res.status(404).json({ error: 'Bird not found' });
     }
@@ -290,39 +312,49 @@ app.delete('/birds/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /birds/:id error:', err);
-    res.status(500).json({ error: 'Error deleting bird', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error deleting bird', detail: String(err) });
   }
 });
 
-// ---------- PAIRS ----------
+// =================================================
+//                      PAIRS
+//  Sheet: Pairs
+//  Header: PairID, MaleID, FemaleID, StartDate, Notes
+// =================================================
 app.get('/pairs', async (req, res) => {
   try {
-    const pairs = await getTable(SHEET_PAIRS, 'A1:G1000');
+    const pairs = await getTable(SHEET_PAIRS, 'A1:E1000');
     res.json(pairs);
   } catch (err) {
     console.error('GET /pairs error:', err);
-    res.status(500).json({ error: 'Error fetching pairs', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error fetching pairs', detail: String(err) });
   }
 });
 
 app.post('/pairs', async (req, res) => {
   try {
     const body = req.body;
-    const newId = await getNextId(SHEET_PAIRS, 'P');
+    const newId = await getNextId(SHEET_PAIRS, 'P'); // P0001, P0002, ...
+
     const values = [
       newId,
       body.MaleID || '',
       body.FemaleID || '',
       body.StartDate || '',
-      body.EndDate || '',
-      body.Status || 'ใช้งาน',
       body.Notes || '',
     ];
-    await appendRow(SHEET_PAIRS, 'A:G', values);
+
+    await appendRow(SHEET_PAIRS, 'A:E', values);
     res.json({ success: true, PairID: newId });
   } catch (err) {
     console.error('POST /pairs error:', err);
-    res.status(500).json({ error: 'Error creating pair', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error creating pair', detail: String(err) });
   }
 });
 
@@ -340,16 +372,16 @@ app.put('/pairs/:id', async (req, res) => {
       body.MaleID || '',
       body.FemaleID || '',
       body.StartDate || '',
-      body.EndDate || '',
-      body.Status || 'ใช้งาน',
       body.Notes || '',
     ];
 
-    await updateRow(SHEET_PAIRS, rowIndex, 'A', 'G', values);
+    await updateRow(SHEET_PAIRS, rowIndex, 'A', 'E', values);
     res.json({ success: true });
   } catch (err) {
     console.error('PUT /pairs/:id error:', err);
-    res.status(500).json({ error: 'Error updating pair', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error updating pair', detail: String(err) });
   }
 });
 
@@ -357,7 +389,7 @@ app.delete('/pairs/:id', async (req, res) => {
   try {
     const id = req.params.id;
 
-    const ok = await deleteRowByIdAndShiftUp(SHEET_PAIRS, 'G', id);
+    const ok = await deleteRowByIdAndShiftUp(SHEET_PAIRS, 'E', id);
     if (!ok) {
       return res.status(404).json({ error: 'Pair not found' });
     }
@@ -365,41 +397,53 @@ app.delete('/pairs/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /pairs/:id error:', err);
-    res.status(500).json({ error: 'Error deleting pair', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error deleting pair', detail: String(err) });
   }
 });
 
-// ---------- CHICKS ----------
+// =================================================
+//                      CHICKS
+//  Sheet: Chicks
+//  Header: ChickID, ClutchID, BirdID, RingNo, Name, HatchDate, Sex, Color, Status
+// =================================================
 app.get('/chicks', async (req, res) => {
   try {
     const chicks = await getTable(SHEET_CHICKS, 'A1:I1000');
     res.json(chicks);
   } catch (err) {
     console.error('GET /chicks error:', err);
-    res.status(500).json({ error: 'Error fetching chicks', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error fetching chicks', detail: String(err) });
   }
 });
 
 app.post('/chicks', async (req, res) => {
   try {
     const body = req.body;
-    const newId = await getNextId(SHEET_CHICKS, 'K');
+    const newId = await getNextId(SHEET_CHICKS, 'K'); // K0001, K0002, ...
+
     const values = [
       newId,
       body.ClutchID || '',
       body.BirdID || '',
       body.RingNo || '',
+      body.Name || '',
       body.HatchDate || '',
       body.Sex || '',
       body.Color || '',
       body.Status || '',
-      body.Notes || '',
     ];
+
     await appendRow(SHEET_CHICKS, 'A:I', values);
     res.json({ success: true, ChickID: newId });
   } catch (err) {
     console.error('POST /chicks error:', err);
-    res.status(500).json({ error: 'Error creating chick', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error creating chick', detail: String(err) });
   }
 });
 
@@ -417,18 +461,20 @@ app.put('/chicks/:id', async (req, res) => {
       body.ClutchID || '',
       body.BirdID || '',
       body.RingNo || '',
+      body.Name || '',
       body.HatchDate || '',
       body.Sex || '',
       body.Color || '',
       body.Status || '',
-      body.Notes || '',
     ];
 
     await updateRow(SHEET_CHICKS, rowIndex, 'A', 'I', values);
     res.json({ success: true });
   } catch (err) {
     console.error('PUT /chicks/:id error:', err);
-    res.status(500).json({ error: 'Error updating chick', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error updating chick', detail: String(err) });
   }
 });
 
@@ -444,7 +490,9 @@ app.delete('/chicks/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /chicks/:id error:', err);
-    res.status(500).json({ error: 'Error deleting chick', detail: String(err) });
+    res
+      .status(500)
+      .json({ error: 'Error deleting chick', detail: String(err) });
   }
 });
 
