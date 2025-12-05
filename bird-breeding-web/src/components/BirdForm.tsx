@@ -18,27 +18,6 @@ const BirdForm: React.FC<BirdFormProps> = ({
     onChange({ ...value, [key]: val });
   };
 
-  // คำนวณอายุ (เดือน) จาก AddedDate
-  const calcAgeMonths = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
-
-    const now = new Date();
-    let months =
-      (now.getFullYear() - d.getFullYear()) * 12 +
-      (now.getMonth() - d.getMonth());
-
-    if (now.getDate() < d.getDate()) {
-      months -= 1;
-    }
-
-    if (months < 0) months = 0;
-    return months.toString();
-  };
-
-  const ageMonths = calcAgeMonths(value.AddedDate);
-
   return (
     <div className="bird-form-card p-4 mb-4">
       {/* หัวข้อ */}
@@ -66,8 +45,8 @@ const BirdForm: React.FC<BirdFormProps> = ({
             type="text"
             className="form-control"
             placeholder="ชื่อนก"
-            value={(value as any).Name || ""} // ถ้า Bird มี Name แล้วให้เอาออก "(as any)"
-            onChange={(e) => update("Name" as any, e.target.value)}
+            value={value.Name}
+            onChange={(e) => update("Name", e.target.value)}
           />
         </div>
 
@@ -97,19 +76,21 @@ const BirdForm: React.FC<BirdFormProps> = ({
         </div>
       </div>
 
-      {/* แถวล่าง: อายุ, สี, วันที่เพิ่ม, ปุ่มบันทึก */}
+      {/* แถวล่าง: อายุ, สี, วันที่เพิ่ม, ที่มา, หมายเหตุ, ปุ่มบันทึก */}
       <div className="row g-3 align-items-end">
+        {/* อายุ (กรอกเอง) */}
         <div className="col-lg-3 col-md-6">
           <label className="form-label">อายุ (เดือน)</label>
           <input
-            type="text"
+            type="number"
             className="form-control"
-            placeholder="อายุ"
-            value={ageMonths}
-            readOnly
+            placeholder="อายุเป็นเดือน"
+            value={value.Age}
+            onChange={(e) => update("Age", e.target.value)}
           />
         </div>
 
+        {/* สี */}
         <div className="col-lg-3 col-md-6">
           <label className="form-label">สี</label>
           <input
@@ -121,6 +102,7 @@ const BirdForm: React.FC<BirdFormProps> = ({
           />
         </div>
 
+        {/* วันที่เพิ่ม */}
         <div className="col-lg-3 col-md-6">
           <label className="form-label">วันที่เพิ่ม *</label>
           <input
@@ -130,6 +112,8 @@ const BirdForm: React.FC<BirdFormProps> = ({
             onChange={(e) => update("AddedDate", e.target.value)}
           />
         </div>
+
+        {/* ที่มา */}
         <div className="col-md-3">
           <label className="form-label">ที่มา *</label>
           <select
@@ -143,7 +127,9 @@ const BirdForm: React.FC<BirdFormProps> = ({
             <option value="ไม่ทราบ">ไม่ทราบ</option>
           </select>
         </div>
-                <div className="col-md-6">
+
+        {/* หมายเหตุ */}
+        <div className="col-md-6">
           <label className="form-label">หมายเหตุ</label>
           <textarea
             className="form-control"
@@ -151,9 +137,11 @@ const BirdForm: React.FC<BirdFormProps> = ({
             onChange={(e) => update("Notes", e.target.value)}
           />
         </div>
+
+        {/* ปุ่มบันทึก */}
         <div className="col-lg-3 col-md-6 d-flex justify-content-lg-end">
           <button
-            className="btn btn-primary w-100 bird-form-save-btn "
+            className="btn btn-primary w-100 bird-form-save-btn"
             onClick={onSave}
             disabled={saving}
           >

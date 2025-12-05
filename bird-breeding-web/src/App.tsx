@@ -426,12 +426,16 @@ function App() {
                     <td>{formatThaiDate(b.AddedDate)}</td>
                     <td className="text-center">
                       <button
-                        type="button"
-                        className="btn btn-link p-0 m-0 bird-action-delete"
+                        className="btn btn-sm btn-outline-primary me-1"
+                        onClick={() => onEdit(b)}
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
                         onClick={() => onDelete(b)}
                       >
-                        <span className="bird-action-delete-icon">🗑️</span>
-                        <span>ลบ</span>
+                        ลบ
                       </button>
                     </td>
                   </tr>
